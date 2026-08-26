@@ -1,0 +1,32 @@
+name: "Setup Go environment"
+description: >-
+  Fetch Go and cache modules.
+  Zero dependencies.
+author: "ndx-technologies"
+inputs:
+  go-version:
+    description: >-
+      The exact Go version to install, e.g. "1.27.0".
+      Must be a full version (major.minor.patch).
+      Prereleases use go.dev naming (e.g. 1.27.0rc1).
+      No ranges or aliases.
+  cache:
+    description: "Restore the Go module cache (GOMODCACHE/GOCACHE) from the Actions cache service."
+    default: "true"
+  cache-dependency-path:
+    description: "Path to the dependency file used to build the cache key."
+    default: "go.mod"
+  go-download-base-url:
+    description: "Base URL for downloading Go distributions."
+    default: "https://go.dev/dl"
+runs:
+  using: composite
+  steps:
+    - name: Install Go and run gh-setup-go
+      shell: bash
+      env:
+        SETUP_GO_GO_VERSION: ${{ inputs.go-version }}
+        SETUP_GO_CACHE: ${{ inputs.cache }}
+        SETUP_GO_CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
+        SETUP_GO_GO_DOWNLOAD_BASE_URL: ${{ inputs.go-download-base-url }}
+      run: $GITHUB_ACTION_PATH/bootstrap.sh
