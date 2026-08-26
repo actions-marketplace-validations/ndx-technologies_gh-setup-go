@@ -51,16 +51,18 @@ func main() {
 	ctx := context.Background()
 
 	if saveCache {
-		if key != "" {
-			if len(cachePaths) == 0 {
-				fmt.Fprintln(os.Stderr, "::warning::cache save: no cache paths found")
-			}
-			if err := s.SaveCache(ctx, cachePaths, key); err != nil {
-				fmt.Fprintf(os.Stderr, "::warning::cache save: %v\n", err)
-				return
-			}
-			fmt.Printf("cache saved with the key: %s\n", key)
+		if key == "" {
+			fmt.Println("cache save: nothing to save (restore was a hit)")
+			return
 		}
+		if len(cachePaths) == 0 {
+			fmt.Fprintln(os.Stderr, "::warning::cache save: no cache paths found")
+		}
+		if err := s.SaveCache(ctx, cachePaths, key); err != nil {
+			fmt.Fprintf(os.Stderr, "::warning::cache save: %v\n", err)
+			return
+		}
+		fmt.Printf("cache saved with the key: %s\n", key)
 		return
 	}
 
