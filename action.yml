@@ -32,4 +32,4 @@ runs:
         SETUP_GO_CACHE: ${{ inputs.cache }}
         SETUP_GO_CACHE_DEPENDENCY_PATH: ${{ inputs.cache-dependency-path }}
         SETUP_GO_GO_DOWNLOAD_BASE_URL: ${{ inputs.go-download-base-url }}
-      run: $GITHUB_ACTION_PATH/bootstrap.sh
+      run: bash $GITHUB_ACTION_PATH/bootstrap.sh
