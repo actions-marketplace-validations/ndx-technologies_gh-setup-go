@@ -1,5 +1,3 @@
-# gh-setup-go
-
 Fetch Go and cache modules.
 Zero dependencies.
 
