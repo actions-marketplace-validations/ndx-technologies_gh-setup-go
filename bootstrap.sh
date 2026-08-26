@@ -39,38 +39,15 @@ TOOL_CACHE="${RUNNER_TOOL_CACHE:-$(mktemp -d)}"
 GO_INSTALL_DIR="${TOOL_CACHE}/go/${GO_VERSION}/${GOARCH}"
 
 # --- 1/2. reuse an exact-match Go, or download ------------------------------
+# The runner's default `go` can report a newer version (GOTOOLCHAIN auto) than
+# the one it actually runs with GOTOOLCHAIN=local, so reuse is only trusted
+# after re-verifying with the exact env shipped to later steps.
 if command -v go >/dev/null 2>&1; then
   CURRENT="$(go version 2>/dev/null | awk '{print $3}' | sed 's/^go//')"
   if [ "$CURRENT" = "$GO_VERSION" ]; then
     GO_INSTALL_DIR="$(dirname "$(dirname "$(command -v go)")")"
     echo "Found go ${GO_VERSION} already on PATH"
   fi
-fi
-
-if [ ! -x "${GO_INSTALL_DIR}/bin/go" ]; then
-  echo "::group::Downloading Go ${GO_VERSION} for ${GOOS}-${GOARCH}"
-  EXT=tar.gz
-  [ "$GOOS" = "windows" ] && EXT=zip
-  BASE_URL="${SETUP_GO_GO_DOWNLOAD_BASE_URL:-https://go.dev/dl}"
-  URL="${BASE_URL%/}/go${GO_VERSION}.${GOOS}-${GOARCH}.${EXT}"
-  TMP="$(mktemp -d)"
-  
-  echo "Downloading ${URL}"
-  
-  curl -fsSL --retry 3 -o "${TMP}/go.${EXT}" "$URL"
-  rm -rf "${GO_INSTALL_DIR}"
-  
-  mkdir -p "$(dirname "${GO_INSTALL_DIR}")" "${GO_INSTALL_DIR}"
-  
-  if [ "$EXT" = "zip" ]; then
-    unzip -q "${TMP}/go.${EXT}" -d "${TMP}/unzip"
-    cp -R "${TMP}/unzip/go/." "${GO_INSTALL_DIR}/"
-  else
-    tar -xzf "${TMP}/go.${EXT}" -C "${GO_INSTALL_DIR}" --strip-components=1
-  fi
-  touch "$(dirname "${GO_INSTALL_DIR}")/${GO_VERSION}.complete"
-  rm -rf "${TMP}"
-  echo "::endgroup::"
 fi
 
 export PATH="${GO_INSTALL_DIR}/bin:${PATH}"
@@ -81,6 +58,38 @@ export GOTOOLCHAIN=local
 # Official Go binaries may resolve GOROOT to a pre-existing /usr/local/go
 # (the path they were built with); pin it to the toolchain we are using.
 export GOROOT="${GO_INSTALL_DIR}"
+
+# Verify the go we will actually run is the requested version under
+# GOTOOLCHAIN=local; if not, install the real distribution.
+if [ ! -x "${GO_INSTALL_DIR}/bin/go" ] || ! go version 2>/dev/null | grep -q "go${GO_VERSION} "; then
+  GO_INSTALL_DIR="${TOOL_CACHE}/go/${GO_VERSION}/${GOARCH}"
+  echo "::group::Downloading Go ${GO_VERSION} for ${GOOS}-${GOARCH}"
+  EXT=tar.gz
+  [ "$GOOS" = "windows" ] && EXT=zip
+  BASE_URL="${SETUP_GO_GO_DOWNLOAD_BASE_URL:-https://go.dev/dl}"
+  URL="${BASE_URL%/}/go${GO_VERSION}.${GOOS}-${GOARCH}.${EXT}"
+  TMP="$(mktemp -d)"
+
+  echo "Downloading ${URL}"
+
+  curl -fsSL --retry 3 -o "${TMP}/go.${EXT}" "$URL"
+  rm -rf "${GO_INSTALL_DIR}"
+
+  mkdir -p "$(dirname "${GO_INSTALL_DIR}")" "${GO_INSTALL_DIR}"
+
+  if [ "$EXT" = "zip" ]; then
+    unzip -q "${TMP}/go.${EXT}" -d "${TMP}/unzip"
+    cp -R "${TMP}/unzip/go/." "${GO_INSTALL_DIR}/"
+  else
+    tar -xzf "${TMP}/go.${EXT}" -C "${GO_INSTALL_DIR}" --strip-components=1
+  fi
+  touch "$(dirname "${GO_INSTALL_DIR}")/${GO_VERSION}.complete"
+  rm -rf "${TMP}"
+  echo "::endgroup::"
+
+  export PATH="${GO_INSTALL_DIR}/bin:${PATH}"
+  export GOROOT="${GO_INSTALL_DIR}"
+fi
 if [ -n "${GITHUB_PATH:-}" ]; then
   echo "${GO_INSTALL_DIR}/bin" >> "$GITHUB_PATH"
 fi

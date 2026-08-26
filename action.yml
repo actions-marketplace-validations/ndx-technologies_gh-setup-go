@@ -1,7 +1,5 @@
 name: "Fetch Go and cache modules"
-description: >-
-  Fetch Go and cache modules.
-  Zero dependencies.
+description: "Fetch Go and cache modules. Zero dependencies."
 author: "ndx-technologies"
 branding:
   icon: arrow-down-circle
