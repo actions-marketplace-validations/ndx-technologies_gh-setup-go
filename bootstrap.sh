@@ -46,7 +46,6 @@ if command -v go >/dev/null 2>&1; then
   CURRENT="$(go version 2>/dev/null | awk '{print $3}' | sed 's/^go//')"
   if [ "$CURRENT" = "$GO_VERSION" ]; then
     GO_INSTALL_DIR="$(dirname "$(dirname "$(command -v go)")")"
-    echo "Found go ${GO_VERSION} already on PATH"
   fi
 fi
 
@@ -89,6 +88,8 @@ if [ ! -x "${GO_INSTALL_DIR}/bin/go" ] || ! go version 2>/dev/null | grep -q "go
 
   export PATH="${GO_INSTALL_DIR}/bin:${PATH}"
   export GOROOT="${GO_INSTALL_DIR}"
+else
+  echo "Found go ${GO_VERSION} already on PATH"
 fi
 if [ -n "${GITHUB_PATH:-}" ]; then
   echo "${GO_INSTALL_DIR}/bin" >> "$GITHUB_PATH"
