@@ -1,4 +1,4 @@
-name: "Setup Go environment"
+name: "Fetch Go and cache modules"
 description: >-
   Fetch Go and cache modules.
   Zero dependencies.
