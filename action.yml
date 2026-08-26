@@ -3,6 +3,9 @@ description: >-
   Fetch Go and cache modules.
   Zero dependencies.
 author: "ndx-technologies"
+branding:
+  icon: arrow-down-circle
+  color: blue
 inputs:
   go-version:
     description: >-
